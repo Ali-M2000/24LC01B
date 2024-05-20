@@ -1,0 +1,73 @@
+/*
+24LC01B
+Ali.M
+*/
+
+#include <Wire.h>
+
+const uint8_t address = 0b1010111; //111 is arbitrary
+
+
+void setup() {
+
+  uint8_t buff[16];
+
+  Serial.begin(9600);
+  Wire.begin();
+  while(!Serial);
+
+  delay(100);
+  Wire.beginTransmission(address);
+  Serial.print("EEPROM ACK: ");
+  Serial.println(!Wire.endTransmission()); // 1 if OK
+
+  for(int i=0;i<128;++i) {
+    Wire.beginTransmission(address);
+    Wire.write(i); //register address
+    Wire.write(i); //data(writing the address of each register in itself)
+    Wire.endTransmission();
+    delay(20);
+  }
+
+  for(int i=0;i<8;++i){
+    Wire.beginTransmission(address);
+    Wire.write(i*16); // register address of the first byte in the 16 byte readout
+    Wire.endTransmission();
+    Wire.requestFrom(address,16);
+    if(Wire.available()) {
+      Wire.readBytes(buff,16);
+    }
+    for(int j=0;j<16;++j) {
+      Serial.println((int8_t)buff[j]); // Printing each byte as an 8-bit integer in two's complement
+      delay(10);
+    }
+  }
+
+  for(int i=0;i<128;++i) {
+    Wire.beginTransmission(address);
+    Wire.write(i); //byte address
+    Wire.write(i-128); //data(each register's address shifted by -128 and writen in itself for testing negetive values) 
+    Wire.endTransmission();
+    delay(10);
+  }
+
+  for(int i=0;i<8;++i){
+    Wire.beginTransmission(address);
+    Wire.write(i*16);
+    Wire.endTransmission();
+    Wire.requestFrom(address,16);
+    if(Wire.available()) {
+      Wire.readBytes(buff,16);
+    }
+    for(int j=0;j<16;++j) {
+      Serial.println((int8_t)buff[j]);
+      delay(10);
+    }
+  }
+
+}
+
+
+void loop() {
+
+}
